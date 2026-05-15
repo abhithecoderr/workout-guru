@@ -1,0 +1,24 @@
+:root {
+  /* Dark Premium Palette */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #121212;
+  --bg-tertiary: #1e1e1e;
+  
+  /* Primary Accents (Electric Blue / Purple vibe) */
+  --accent-primary: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-glow: rgba(59, 130, 246, 0.5);
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* Borders & Dividers */
+  --border-color: #27272a;
+  
+  /* Status Colors */
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+}
