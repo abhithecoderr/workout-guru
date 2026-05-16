@@ -13,6 +13,7 @@ const ActiveSession = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
+  const [countdown, setCountdown] = useState(0); // For the 3..2..1 flash
 
   // Redirect to home if accessed directly without state
   useEffect(() => {
@@ -25,12 +26,30 @@ const ActiveSession = () => {
 
   useEffect(() => {
     if (currentExercise) {
-      setTimeLeft(currentExercise.adjustedDuration || 0);
-      setTimerActive(false); // require user to manually start the timer
-      // Trigger audioUrl to play here in the future
+      if (currentExercise.isTimeBased) {
+        setTimeLeft(currentExercise.adjustedDuration || 0);
+        setTimerActive(false);
+        setCountdown(3); // Initiate countdown flash
+      } else {
+        setTimeLeft(0);
+        setTimerActive(false);
+        setCountdown(0);
+      }
     }
   }, [currentIndex, currentExercise]);
 
+  // Handle 3..2..1 countdown
+  useEffect(() => {
+    if (countdown > 0) {
+      const id = setTimeout(() => setCountdown(c => c - 1), 1000);
+      return () => clearTimeout(id);
+    } else if (countdown === 0 && currentExercise?.isTimeBased && !timerActive && timeLeft > 0) {
+      // Auto-start actual timer when countdown finishes
+      setTimerActive(true);
+    }
+  }, [countdown, currentExercise, timerActive, timeLeft]);
+
+  // Handle actual timer
   useEffect(() => {
     let interval;
     if (timerActive && timeLeft > 0) {
@@ -58,7 +77,6 @@ const ActiveSession = () => {
   };
 
   const handleComplete = () => {
-    // Save the session to browser history via LocalStorage
     const history = JSON.parse(localStorage.getItem('workoutHistory') || '[]');
     const newEntry = {
       id: Date.now(),
@@ -69,7 +87,6 @@ const ActiveSession = () => {
     };
     localStorage.setItem('workoutHistory', JSON.stringify([...history, newEntry]));
     
-    // For now, redirect to Home. We will build a dedicated History page in Phase 7.
     alert("Workout Completed! Saved to Personal History.");
     navigate('/');
   };
@@ -109,14 +126,31 @@ const ActiveSession = () => {
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Sets</span>
           <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 'bold' }}>{currentExercise.adjustedSets}</span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Reps</span>
-          <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 'bold' }}>{currentExercise.adjustedReps}</span>
-        </div>
+        
+        {!currentExercise.isTimeBased && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Reps</span>
+            <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 'bold' }}>{currentExercise.adjustedReps}</span>
+          </div>
+        )}
       </div>
 
-      {currentExercise.adjustedDuration > 0 && (
-        <Card style={{ marginBottom: '2rem', textAlign: 'center', borderColor: timerActive ? 'var(--accent-primary)' : 'var(--border-color)' }}>
+      {currentExercise.isTimeBased && (
+        <Card style={{ marginBottom: '2rem', textAlign: 'center', borderColor: timerActive ? 'var(--accent-primary)' : 'var(--border-color)', position: 'relative', overflow: 'hidden' }}>
+          
+          {/* Countdown Overlay */}
+          {countdown > 0 && (
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+              backgroundColor: 'rgba(10, 10, 10, 0.9)', zIndex: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '4rem', fontWeight: 'bold', color: 'var(--accent-primary)',
+              animation: 'pulse 1s infinite'
+            }}>
+              {countdown}
+            </div>
+          )}
+
           <div style={{ fontSize: 'var(--text-4xl)', fontWeight: 'bold', fontFamily: 'monospace', color: timeLeft === 0 ? 'var(--success)' : 'var(--text-primary)' }}>
             {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:{(timeLeft % 60).toString().padStart(2, '0')}
           </div>
@@ -124,8 +158,12 @@ const ActiveSession = () => {
             variant={timerActive ? 'secondary' : 'primary'} 
             style={{ marginTop: '1rem', width: '200px' }}
             onClick={() => {
-              if (timeLeft === 0) setTimeLeft(currentExercise.adjustedDuration);
-              else setTimerActive(!timerActive);
+              if (timeLeft === 0) {
+                setTimeLeft(currentExercise.adjustedDuration);
+                setCountdown(3); // restart full sequence
+              } else {
+                setTimerActive(!timerActive);
+              }
             }}
           >
             {timerActive ? 'Pause Timer' : (timeLeft === 0 ? 'Reset Timer' : 'Start Timer')}

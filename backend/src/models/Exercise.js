@@ -10,6 +10,7 @@ const exerciseSchema = new mongoose.Schema({
   defaultReps: { type: Number, default: 10 },
   defaultSets: { type: Number, default: 3 },
   durationSeconds: { type: Number, default: 30 }, // useful for timed exercises
+  isTimeBased: { type: Boolean, default: false },
 }, {
   timestamps: true
 });

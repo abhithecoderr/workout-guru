@@ -14,11 +14,7 @@ exports.generateSession = async (req, reply) => {
     const contextList = allExercises.map(ex => ({
       id: ex._id,
       name: ex.name,
-      focusArea: ex.focusArea,
-      description: ex.description,
-      defaultReps: ex.defaultReps,
-      defaultSets: ex.defaultSets,
-      durationSeconds: ex.durationSeconds
+      focusArea: ex.focusArea
     }));
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });

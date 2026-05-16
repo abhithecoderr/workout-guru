@@ -16,3 +16,10 @@ export const generateAiSession = async (prompt) => {
   if (!res.ok) throw new Error('Failed to generate AI session');
   return res.json();
 };
+
+export const getRoutines = async (area = '') => {
+  const url = area ? `${API_URL}/routines?area=${encodeURIComponent(area)}` : `${API_URL}/routines`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch routines');
+  return res.json();
+};
